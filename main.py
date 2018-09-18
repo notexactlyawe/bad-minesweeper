@@ -162,10 +162,12 @@ class Game():
         return True
 
     def draw(self):
-        for row in self.grid:
-            for column in row:
-                print(column, end="")
-            print()
+        print('  ', end='')
+        print(' '.join([str(x) for x in range(len(self.grid[0]))]))
+
+        for idx, row in enumerate(self.grid):
+            print(str(idx) + ' ', end='')
+            print(' '.join([str(x) for x in row]))
 
 g = Game()
 
