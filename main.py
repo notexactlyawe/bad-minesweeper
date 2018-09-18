@@ -54,11 +54,28 @@ class Game():
                 self.get_cell(y_idx+1, x_idx),
                 self.get_cell(y_idx+1, x_idx+1)]
 
-    def get_cell(self, y_idx, x_idx):
-        try:
+    def get_surrounding_indices(self, y_idx, x_idx):
+        idxs = [self.get_cell(y_idx-1, x_idx-1, False),
+                self.get_cell(y_idx-1, x_idx, False),
+                self.get_cell(y_idx-1, x_idx+1, False),
+                self.get_cell(y_idx, x_idx-1, False),
+                self.get_cell(y_idx, x_idx+1, False),
+                self.get_cell(y_idx+1, x_idx-1, False),
+                self.get_cell(y_idx+1, x_idx, False),
+                self.get_cell(y_idx+1, x_idx+1, False)]
+        return [x for x in idxs if x is not None]
+
+
+    def get_cell(self, y_idx, x_idx, return_cell=True):
+        max_y = len(self.grid) - 1
+        max_x = len(self.grid[0]) - 1
+        if y_idx < 0 or x_idx < 0 or y_idx > max_y or x_idx > max_x:
+            if return_cell:
+                return Cell()
+            return None
+        if return_cell:
             return self.grid[y_idx][x_idx]
-        except:
-            return Cell()
+        return (y_idx, x_idx)
 
     def calculate_surrounding(self):
         for y_idx, row in enumerate(self.grid):
@@ -69,8 +86,8 @@ class Game():
     def flag(self, cell):
         self.grid[cell[1]][cell[0]].is_flag = True
 
-    def clear(self, cell):
-        cell = self.grid[cell[1]][cell[0]]
+    def clear(self, coords):
+        cell = self.grid[coords[1]][coords[0]]
         if cell.is_flag:
             return
 
@@ -78,7 +95,21 @@ class Game():
 
         if cell.is_mine:
             self.end()
+            print("You lost!")
             return
+
+        if cell.num_surrounding == 0:
+            self.reveal_empty_surrounding(coords, [])
+
+    def reveal_empty_surrounding(self, coords, checked):
+        cell = self.get_cell(coords[0], coords[1])
+        cell.visible = True
+        checked.append(coords)
+        if cell.num_surrounding == 0 and not cell.is_mine:
+            for new_coords in self.get_surrounding_indices(coords):
+                if new_coords not in checked:
+                    checked = self.reveal_empty_surrounding(new_coords, checked)
+        return checked
 
     def end(self):
         self.end_flag = True
@@ -125,9 +156,9 @@ class Game():
         return len(split_input) == 3 and split_input[0] in self.ACCEPTED_INSTRUCTIONS
 
     def check_cell(self, cell):
-        if cell[0] < 0 or cell[0] > len(self.grid[0]):
+        if cell[0] < 0 or cell[0] >= len(self.grid[0]):
             return False
-        if cell[1] < 0 or cell[1] > len(self.grid):
+        if cell[1] < 0 or cell[1] >= len(self.grid):
             return False
         return True
 
