@@ -29,6 +29,8 @@ class Game():
             self.grid.append(temp)
         self.first_input = True
         self.num_mines = num_mines
+        self.flags_remaining = num_mines
+        self.won = False
 
     def lay_mines(self, num_mines, ignore=None):
         width = len(self.grid[0])
@@ -82,11 +84,19 @@ class Game():
                 surrounding = self.get_surrounding(y_idx, x_idx)
                 cell.num_surrounding = sum([1 for x in surrounding if x.is_mine])
 
-    def flag(self, cell):
-        self.grid[cell[1]][cell[0]].is_flag = True
+    def flag(self, coords):
+        cell = self.grid[coords[0]][coords[1]]
+        if cell.is_flag:
+            cell.is_flag = False
+            self.flags_remaining += 1
+        else:
+            cell.is_flag = True
+            self.flags_remaining -= 1
+            if self.flags_remaining < 1:
+                self.check_win()
 
     def clear(self, coords):
-        cell = self.grid[coords[1]][coords[0]]
+        cell = self.grid[coords[0]][coords[1]]
         if cell.is_flag:
             return
 
@@ -169,11 +179,29 @@ class Game():
             print(str(idx) + ' ', end='')
             print(' '.join([str(x) for x in row]))
 
+        print("Flags Remaining: {0}".format(self.flags_remaining))
+
+    def check_win(self):
+        if self.flags_remaining > 0:
+            return
+
+        for row in self.grid:
+            for cell in row:
+                if cell.is_flag and not cell.is_mine:
+                    return
+                if cell.is_mine and not cell.is_flag:
+                    return
+
+        self.won = True
+
 g = Game()
 
 g.draw()
 
 while not g.end_flag:
+    if g.won:
+        print("You won!")
+        break
     g.handle_input()
     if g.end_flag:
         break
