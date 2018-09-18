@@ -1,4 +1,3 @@
-import pdb
 import random
 import itertools
 
@@ -106,10 +105,10 @@ class Game():
         cell.visible = True
         checked.append(coords)
         if cell.num_surrounding == 0 and not cell.is_mine:
-            for new_coords in self.get_surrounding_indices(coords):
+            for new_coords in self.get_surrounding_indices(coords[0], coords[1]):
                 if new_coords not in checked:
-                    checked = self.reveal_empty_surrounding(new_coords, checked)
-        return checked
+                    checked.append(new_coords)
+                    self.reveal_empty_surrounding(new_coords, checked)
 
     def end(self):
         self.end_flag = True
